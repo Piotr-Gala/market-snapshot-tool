@@ -37,6 +37,8 @@ public final class MarketSnapshotService {
                     market.symbol().toUpperCase(),
                     market.name(),
                     requireValue(market.currentPrice(), "current price", asset),
+                    market.marketCap(),
+                    market.marketCapRank(),
                     market.priceChangePercentage24h(),
                     statisticsCalculator.calculateReturn(dailyPrices, 7),
                     statisticsCalculator.calculateReturn(dailyPrices, 30),

@@ -14,7 +14,7 @@ Build a minimal, extendable command-line tool that:
 ## Planned MVP scope
 
 - assets: `BTC`, `ETH`, `SOL`
-- metrics: current price, 24h change, 7d return, 30d return, realized volatility
+- metrics: current price, market cap, market cap rank, 24h change, 7d return, 30d return, realized volatility
 - API: CoinGecko
 - stack: Java 21, Maven, `HttpClient`, Jackson
 
@@ -26,5 +26,12 @@ The repository now contains a minimal Maven starter so the project can compile a
 
 ```bash
 mvn compile
+mvn exec:java
+```
+
+Optional for more reliable CoinGecko access during development:
+
+```bash
+$env:COINGECKO_DEMO_API_KEY="your-demo-key"
 mvn exec:java
 ```

@@ -6,7 +6,9 @@ import java.util.stream.Collectors;
 public enum Asset {
     BTC("bitcoin", "btc"),
     ETH("ethereum", "eth"),
-    SOL("solana", "sol");
+    SOL("solana", "sol"),
+    XRP("ripple", "xrp"),
+    BNB("binancecoin", "bnb");
 
     private final String coinGeckoId;
     private final String symbol;
