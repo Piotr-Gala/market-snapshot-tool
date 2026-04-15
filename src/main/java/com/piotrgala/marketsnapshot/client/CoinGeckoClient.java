@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.piotrgala.marketsnapshot.model.Asset;
 import com.piotrgala.marketsnapshot.model.CoinMarket;
+import com.piotrgala.marketsnapshot.model.MarketChartResponse;
+import com.piotrgala.marketsnapshot.model.PricePoint;
 
 import java.io.IOException;
 import java.net.URI;
@@ -14,6 +16,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public final class CoinGeckoClient {
 
@@ -53,6 +56,30 @@ public final class CoinGeckoClient {
         return sortByRequestedAssets(markets, assets);
     }
 
+    public List<PricePoint> fetchPriceHistory(Asset asset, int days) throws IOException, InterruptedException {
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(buildMarketChartUri(asset, days))
+                .timeout(Duration.ofSeconds(20))
+                .header("accept", "application/json")
+                .GET()
+                .build();
+
+        HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() != 200) {
+            throw new IllegalStateException("CoinGecko history request failed with status code " + response.statusCode());
+        }
+
+        MarketChartResponse marketChart = objectMapper.readValue(response.body(), MarketChartResponse.class);
+        if (marketChart.prices() == null || marketChart.prices().isEmpty()) {
+            throw new IllegalStateException("CoinGecko history response is missing prices for " + asset.symbol());
+        }
+
+        return marketChart.prices().stream()
+                .map(this::toPricePoint)
+                .collect(Collectors.toList());
+    }
+
     private URI buildMarketsUri(List<Asset> assets) {
         String ids = Asset.joinCoinGeckoIds(assets);
         String uri = BASE_URL
@@ -62,6 +89,15 @@ public final class CoinGeckoClient {
                 + "&price_change_percentage=7d,30d"
                 + "&sparkline=false"
                 + "&precision=full";
+
+        return URI.create(uri);
+    }
+
+    private URI buildMarketChartUri(Asset asset, int days) {
+        String uri = BASE_URL
+                + "/coins/" + asset.coinGeckoId() + "/market_chart"
+                + "?vs_currency=usd"
+                + "&days=" + days;
 
         return URI.create(uri);
     }
@@ -83,5 +119,15 @@ public final class CoinGeckoClient {
             throw new IllegalStateException("CoinGecko response is missing data for " + asset.symbol());
         }
         return market;
+    }
+
+    private PricePoint toPricePoint(List<Number> rawPricePoint) {
+        if (rawPricePoint.size() < 2) {
+            throw new IllegalStateException("CoinGecko price point is malformed");
+        }
+
+        long timestampMillis = rawPricePoint.get(0).longValue();
+        double price = rawPricePoint.get(1).doubleValue();
+        return new PricePoint(timestampMillis, price);
     }
 }

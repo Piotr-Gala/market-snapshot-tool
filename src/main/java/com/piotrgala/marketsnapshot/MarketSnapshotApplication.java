@@ -1,8 +1,8 @@
 package com.piotrgala.marketsnapshot;
 
-import com.piotrgala.marketsnapshot.client.CoinGeckoClient;
 import com.piotrgala.marketsnapshot.model.Asset;
-import com.piotrgala.marketsnapshot.model.CoinMarket;
+import com.piotrgala.marketsnapshot.model.AssetSnapshot;
+import com.piotrgala.marketsnapshot.service.MarketSnapshotService;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,11 +14,11 @@ public final class MarketSnapshotApplication {
     }
 
     public static void main(String[] args) {
-        CoinGeckoClient client = new CoinGeckoClient();
+        MarketSnapshotService marketSnapshotService = new MarketSnapshotService();
 
         try {
-            List<CoinMarket> markets = client.fetchMarkets(Asset.defaultAssets());
-            printMarkets(markets);
+            List<AssetSnapshot> snapshots = marketSnapshotService.getSnapshot(Asset.defaultAssets());
+            printSnapshot(snapshots);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             System.err.println("Request was interrupted: " + exception.getMessage());
@@ -27,28 +27,26 @@ public final class MarketSnapshotApplication {
         }
     }
 
-    private static void printMarkets(List<CoinMarket> markets) {
+    private static void printSnapshot(List<AssetSnapshot> snapshots) {
         System.out.println("market-snapshot-tool");
         System.out.println();
 
-        for (CoinMarket market : markets) {
+        for (AssetSnapshot snapshot : snapshots) {
             System.out.printf(
                     Locale.US,
-                    "%-4s %-10s price: %12s | 24h: %8s | 7d: %8s | 30d: %8s%n",
-                    market.symbol().toUpperCase(Locale.US),
-                    market.name(),
-                    formatPrice(market.currentPrice()),
-                    formatPercent(market.priceChangePercentage24h()),
-                    formatPercent(market.priceChangePercentage7d()),
-                    formatPercent(market.priceChangePercentage30d())
+                    "%-4s %-10s price: %12s | 24h: %8s | 7d: %8s | 30d: %8s | 30d vol (ann.): %8s%n",
+                    snapshot.symbol(),
+                    snapshot.name(),
+                    formatPrice(snapshot.currentPrice()),
+                    formatPercent(snapshot.change24h()),
+                    formatPercent(snapshot.return7d()),
+                    formatPercent(snapshot.return30d()),
+                    formatPercent(snapshot.realizedVolatility())
             );
         }
     }
 
-    private static String formatPrice(Double value) {
-        if (value == null) {
-            return "n/a";
-        }
+    private static String formatPrice(double value) {
         return String.format(Locale.US, "$%,.2f", value);
     }
 
