@@ -8,12 +8,15 @@ import java.util.List;
 public final class StatisticsCalculator {
 
     private static final long ONE_DAY_MILLIS = 24L * 60L * 60L * 1000L;
+    private static final long COVERAGE_TOLERANCE_MILLIS = 12L * 60L * 60L * 1000L;
     private static final double CRYPTO_TRADING_DAYS = 365.0;
 
     public List<PricePoint> sampleDailyPrices(List<PricePoint> intradayPrices, int lookbackDays) {
         if (intradayPrices.isEmpty()) {
             throw new IllegalArgumentException("Price history cannot be empty");
         }
+
+        validateHistoryCoverage(intradayPrices, lookbackDays);
 
         List<PricePoint> sampledPrices = new ArrayList<>();
         long latestTimestamp = intradayPrices.get(intradayPrices.size() - 1).timestampMillis();
@@ -31,6 +34,18 @@ public final class StatisticsCalculator {
         }
 
         return sampledPrices;
+    }
+
+    private void validateHistoryCoverage(List<PricePoint> intradayPrices, int lookbackDays) {
+        long earliestTimestamp = intradayPrices.get(0).timestampMillis();
+        long latestTimestamp = intradayPrices.get(intradayPrices.size() - 1).timestampMillis();
+        long requiredStartTimestamp = latestTimestamp - (lookbackDays * ONE_DAY_MILLIS);
+
+        if (earliestTimestamp > requiredStartTimestamp + COVERAGE_TOLERANCE_MILLIS) {
+            throw new IllegalArgumentException(
+                    "Price history does not cover the full " + lookbackDays + " day window"
+            );
+        }
     }
 
     public double calculateReturn(List<PricePoint> dailyPrices, int days) {

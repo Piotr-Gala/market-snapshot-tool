@@ -9,7 +9,7 @@ This project is intentionally small. It is not a trading bot, not an alpha engin
 - fetches live market data for `BTC`, `ETH`, and `SOL`
 - pulls recent price history from CoinGecko
 - computes `7d return`, `30d return`, and `30d realized volatility (annualized)`
-- shows `market cap` and `market cap rank`
+- shows `market cap`
 - prints a compact market snapshot and a tracked-assets ranking by market cap
 
 ## Example output
@@ -19,15 +19,15 @@ market-snapshot-tool
 
 Snapshot
 
-BTC  Bitcoin    price:   $74,773.74 | 24h:    0.75% | 7d:    4.86% | 30d:    0.74% | 30d vol (ann.):   42.01% | mc rank:    #1 | mc:     $1.50T
-ETH  Ethereum   price:    $2,359.68 | 24h:    1.91% | 7d:    6.88% | 30d:    0.59% | 30d vol (ann.):   55.62% | mc rank:    #2 | mc:   $284.79B
-SOL  Solana     price:       $84.79 | 24h:    1.36% | 7d:    2.07% | 30d:  -11.48% | 30d vol (ann.):   53.59% | mc rank:    #7 | mc:    $48.78B
+BTC  Bitcoin    price:   $74,773.74 | 24h:    0.75% | 7d:    4.86% | 30d:    0.74% | 30d vol (ann.):   42.01% | mc:     $1.50T
+ETH  Ethereum   price:    $2,359.68 | 24h:    1.91% | 7d:    6.88% | 30d:    0.59% | 30d vol (ann.):   55.62% | mc:   $284.79B
+SOL  Solana     price:       $84.79 | 24h:    1.36% | 7d:    2.07% | 30d:  -11.48% | 30d vol (ann.):   53.59% | mc:    $48.78B
 
 Tracked assets by market cap
 
-1. BTC  Bitcoin    | global mc rank:    #1 | mc:     $1.50T
-2. ETH  Ethereum   | global mc rank:    #2 | mc:   $284.79B
-3. SOL  Solana     | global mc rank:    #7 | mc:    $48.78B
+1. BTC  Bitcoin    | mc:     $1.50T
+2. ETH  Ethereum   | mc:   $284.79B
+3. SOL  Solana     | mc:    $48.78B
 ```
 
 ## Metrics
@@ -38,7 +38,6 @@ Tracked assets by market cap
 - `30d return`: percentage return computed from sampled daily prices over the last 30 days
 - `30d vol (ann.)`: realized volatility computed from daily log returns over the last 30 days and annualized with `sqrt(365)`
 - `market cap`: latest USD market capitalization
-- `market cap rank`: asset rank by global market capitalization
 
 ## Stack
 
@@ -94,7 +93,7 @@ mvn test
 
 This project uses the public CoinGecko API. On free/public access, `429 Too Many Requests` can happen during repeated local runs.
 
-The client includes basic throttling and retry logic for rate limits, but the public API can still be restrictive.
+The service includes basic throttling and retry logic for rate limits, but the public API can still be restrictive.
 
 ## Why this project
 

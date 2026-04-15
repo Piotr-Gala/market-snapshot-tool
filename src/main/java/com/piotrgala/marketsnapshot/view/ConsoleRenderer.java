@@ -17,7 +17,7 @@ public final class ConsoleRenderer {
         for (AssetSnapshot snapshot : snapshots) {
             System.out.printf(
                     Locale.US,
-                    "%-4s %-10s price: %12s | 24h: %8s | 7d: %8s | 30d: %8s | 30d vol (ann.): %8s | mc rank: %5s | mc: %10s%n",
+                    "%-4s %-10s price: %12s | 24h: %8s | 7d: %8s | 30d: %8s | 30d vol (ann.): %8s | mc: %10s%n",
                     snapshot.symbol(),
                     snapshot.name(),
                     formatPrice(snapshot.currentPrice()),
@@ -25,7 +25,6 @@ public final class ConsoleRenderer {
                     formatPercent(snapshot.return7d()),
                     formatPercent(snapshot.return30d()),
                     formatPercent(snapshot.realizedVolatility()),
-                    formatMarketCapRank(snapshot.marketCapRank()),
                     formatMarketCap(snapshot.marketCap())
             );
         }
@@ -43,11 +42,10 @@ public final class ConsoleRenderer {
             AssetSnapshot snapshot = rankedSnapshots.get(i);
             System.out.printf(
                     Locale.US,
-                    "%d. %-4s %-10s | global mc rank: %5s | mc: %10s%n",
+                    "%d. %-4s %-10s | mc: %10s%n",
                     i + 1,
                     snapshot.symbol(),
                     snapshot.name(),
-                    formatMarketCapRank(snapshot.marketCapRank()),
                     formatMarketCap(snapshot.marketCap())
             );
         }
@@ -81,10 +79,4 @@ public final class ConsoleRenderer {
         return String.format(Locale.US, "$%,.2f", value);
     }
 
-    private String formatMarketCapRank(Integer value) {
-        if (value == null) {
-            return "n/a";
-        }
-        return "#" + value;
-    }
 }
