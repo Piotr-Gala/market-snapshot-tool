@@ -1,0 +1,23 @@
+<svg width="1280" height="360" viewBox="0 0 1280 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="360" rx="12" fill="#111827"/>
+  <rect x="0.5" y="0.5" width="1279" height="359" rx="11.5" stroke="#374151"/>
+  <circle cx="24" cy="24" r="6" fill="#EF4444"/>
+  <circle cx="44" cy="24" r="6" fill="#F59E0B"/>
+  <circle cx="64" cy="24" r="6" fill="#10B981"/>
+
+  <g font-family="Consolas, Monaco, 'Courier New', monospace" font-size="14" fill="#F9FAFB">
+    <text x="20" y="56">market-snapshot-tool</text>
+
+    <text x="20" y="100">Snapshot</text>
+
+    <text x="20" y="140">BTC  Bitcoin    price:   $74,773.74 | 24h:    0.75% | 7d:    4.86% | 30d:    0.74% | 30d vol (ann.):   42.01% | mc rank:    #1 | mc:     $1.50T</text>
+    <text x="20" y="164">ETH  Ethereum   price:    $2,359.68 | 24h:    1.91% | 7d:    6.88% | 30d:    0.59% | 30d vol (ann.):   55.62% | mc rank:    #2 | mc:   $284.79B</text>
+    <text x="20" y="188">SOL  Solana     price:       $84.79 | 24h:    1.36% | 7d:    2.07% | 30d:  -11.48% | 30d vol (ann.):   53.59% | mc rank:    #7 | mc:    $48.78B</text>
+
+    <text x="20" y="236">Tracked assets by market cap</text>
+
+    <text x="20" y="284">1. BTC  Bitcoin    | global mc rank:    #1 | mc:     $1.50T</text>
+    <text x="20" y="308">2. ETH  Ethereum   | global mc rank:    #2 | mc:   $284.79B</text>
+    <text x="20" y="332">3. SOL  Solana     | global mc rank:    #7 | mc:    $48.78B</text>
+  </g>
+</svg>
