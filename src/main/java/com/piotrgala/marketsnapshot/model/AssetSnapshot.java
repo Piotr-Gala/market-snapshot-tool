@@ -5,7 +5,6 @@ public record AssetSnapshot(
         String name,
         double currentPrice,
         Double marketCap,
-        Integer marketCapRank,
         Double change24h,
         double return7d,
         double return30d,

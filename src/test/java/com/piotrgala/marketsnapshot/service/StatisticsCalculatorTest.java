@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class StatisticsCalculatorTest {
 
@@ -36,5 +37,17 @@ class StatisticsCalculatorTest {
         double realizedVolatility = calculator.calculateAnnualizedVolatility(dailyPrices);
 
         assertEquals(0.0, realizedVolatility, 0.0001);
+    }
+
+    @Test
+    void shouldRejectHistoryThatDoesNotCoverRequestedWindow() {
+        long oneDayMillis = 24L * 60L * 60L * 1000L;
+        List<PricePoint> partialHistory = List.of(
+                new PricePoint(10L * oneDayMillis, 100.0),
+                new PricePoint(20L * oneDayMillis, 110.0),
+                new PricePoint(30L * oneDayMillis, 120.0)
+        );
+
+        assertThrows(IllegalArgumentException.class, () -> calculator.sampleDailyPrices(partialHistory, 30));
     }
 }
