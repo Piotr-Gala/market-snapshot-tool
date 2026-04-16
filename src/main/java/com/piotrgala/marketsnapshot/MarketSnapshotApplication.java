@@ -40,7 +40,7 @@ public final class MarketSnapshotApplication {
             for (String warning : result.warnings()) {
                 System.err.println("Warning: " + warning);
             }
-            return 0;
+            return resolveCliExitCode(result);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             System.err.println("Request was interrupted: " + exception.getMessage());
@@ -49,6 +49,13 @@ public final class MarketSnapshotApplication {
             System.err.println("Failed to fetch market data: " + exception.getMessage());
             return 1;
         }
+    }
+
+    static int resolveCliExitCode(SnapshotResult result) {
+        if (result.snapshots().isEmpty()) {
+            return 1;
+        }
+        return 0;
     }
 
     private static boolean containsArg(String[] args, String expectedArg) {
