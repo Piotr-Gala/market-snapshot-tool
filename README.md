@@ -2,6 +2,10 @@
 
 Small Java CLI tool that fetches live crypto market data, computes a few simple analytics, and prints a clean terminal snapshot.
 
+It also includes a mini desktop UI, so you can click asset and sorting options instead of using the terminal for every refresh.
+Short-lived in-memory caching helps reduce CoinGecko rate-limit pain during repeated refreshes.
+The app also handles partial asset failures more gracefully and can export the latest snapshot to CSV.
+
 This project is intentionally small. It is not a trading bot, not an alpha engine, and not a full market data platform. The goal is to show a clean, practical MVP built with plain Java and Maven.
 
 ## What it does
@@ -54,14 +58,18 @@ Tracked assets by market cap
 src/main/java/com/piotrgala/marketsnapshot
 |- MarketSnapshotApplication.java
 |- client/
+|- export/
 |- model/
 |- service/
+|- ui/
 `- view/
 ```
 
 - `client`: HTTP requests and JSON parsing
+- `export`: CSV export for saved snapshots
 - `model`: API response models and internal snapshot models
 - `service`: data orchestration and statistics calculation
+- `ui`: desktop controls and table-based Swing presentation
 - `view`: terminal output formatting
 
 ## Run locally
@@ -83,10 +91,28 @@ Run:
 mvn exec:java
 ```
 
+Run the desktop UI:
+
+```bash
+mvn exec:java -Dexec.args="--ui"
+```
+
+In PowerShell, prefer:
+
+```powershell
+mvn -q exec:java "-Dexec.args=--ui"
+```
+
 Run tests:
 
 ```bash
 mvn test
+```
+
+Show help:
+
+```bash
+mvn exec:java -Dexec.args="--help"
 ```
 
 ## CoinGecko note
@@ -94,6 +120,25 @@ mvn test
 This project uses the public CoinGecko API. On free/public access, `429 Too Many Requests` can happen during repeated local runs.
 
 The service includes basic throttling and retry logic for rate limits, but the public API can still be restrictive.
+
+To make repeated UI refreshes less annoying, the app also keeps a small in-memory cache:
+
+- market snapshots: about `45s`
+- price history used for analytics: about `15m`
+
+The UI status bar tells you whether the latest view came from `live`, `cached`, or `mixed` data.
+If one asset fails but others succeed, the UI keeps the good rows and shows warning details on hover.
+
+## Export
+
+The desktop UI includes an `Export CSV` button that saves the currently visible snapshot order to a CSV file.
+That export includes:
+
+- symbol and name
+- current price and returns
+- volatility and market cap
+- data source (`live`, `cached`, `mixed`)
+- snapshot timestamp in UTC
 
 ## Why this project
 

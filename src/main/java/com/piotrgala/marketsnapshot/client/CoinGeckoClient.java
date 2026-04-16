@@ -13,12 +13,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
-public final class CoinGeckoClient {
+public final class CoinGeckoClient implements MarketDataClient {
 
     private static final String BASE_URL = "https://api.coingecko.com/api/v3";
     private static final String USER_AGENT = "market-snapshot-tool/0.1";
@@ -49,10 +47,8 @@ public final class CoinGeckoClient {
             );
         }
 
-        List<CoinMarket> markets = objectMapper.readValue(response.body(), new TypeReference<>() {
+        return objectMapper.readValue(response.body(), new TypeReference<>() {
         });
-
-        return sortByRequestedAssets(markets, assets);
     }
 
     public List<PricePoint> fetchPriceHistory(Asset asset, int days) throws IOException, InterruptedException {
@@ -96,25 +92,6 @@ public final class CoinGeckoClient {
                 + "&days=" + days;
 
         return URI.create(uri);
-    }
-
-    private List<CoinMarket> sortByRequestedAssets(List<CoinMarket> markets, List<Asset> assets) {
-        Map<String, CoinMarket> marketsById = new LinkedHashMap<>();
-        for (CoinMarket market : markets) {
-            marketsById.put(market.id(), market);
-        }
-
-        return assets.stream()
-                .map(asset -> requireMarket(marketsById, asset))
-                .toList();
-    }
-
-    private CoinMarket requireMarket(Map<String, CoinMarket> marketsById, Asset asset) {
-        CoinMarket market = marketsById.get(asset.coinGeckoId());
-        if (market == null) {
-            throw new IllegalStateException("CoinGecko response is missing data for " + asset.symbol());
-        }
-        return market;
     }
 
     private PricePoint toPricePoint(List<Number> rawPricePoint) {
