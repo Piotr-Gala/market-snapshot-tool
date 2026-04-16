@@ -1,10 +1,8 @@
-# market-snapshot-tool
+# market-snapshot-tool-2.0
 
-Small Java CLI tool that fetches live crypto market data, computes a few simple analytics, and prints a clean terminal snapshot.
+This is the second version of the original mini CLI market snapshot project.
 
-It also includes a mini desktop UI, so you can click asset and sorting options instead of using the terminal for every refresh.
-Short-lived in-memory caching helps reduce CoinGecko rate-limit pain during repeated refreshes.
-The app also handles partial asset failures more gracefully and can export the latest snapshot to CSV.
+`market-snapshot-tool-2.0` keeps the same simple terminal entrypoint as the first version, but adds a mini desktop UI, short-lived caching, CSV export, and better handling of partial asset failures.
 
 This project is intentionally small. It is not a trading bot, not an alpha engine, and not a full market data platform. The goal is to show a clean, practical MVP built with plain Java and Maven.
 
@@ -60,6 +58,7 @@ src/main/java/com/piotrgala/marketsnapshot
 |- client/
 |- export/
 |- model/
+|- presentation/
 |- service/
 |- ui/
 `- view/
@@ -68,6 +67,7 @@ src/main/java/com/piotrgala/marketsnapshot
 - `client`: HTTP requests and JSON parsing
 - `export`: CSV export for saved snapshots
 - `model`: API response models and internal snapshot models
+- `presentation`: shared sorting / presentation policies used by both CLI and UI
 - `service`: data orchestration and statistics calculation
 - `ui`: desktop controls and table-based Swing presentation
 - `view`: terminal output formatting
@@ -85,13 +85,15 @@ Compile:
 mvn compile
 ```
 
-Run:
+Classic CLI run, same idea as v1:
 
 ```bash
 mvn exec:java
 ```
 
-Run the desktop UI:
+If you just want the terminal tool, this is still the default entrypoint.
+
+Expanded 2.0 desktop UI:
 
 ```bash
 mvn exec:java -Dexec.args="--ui"
@@ -100,7 +102,7 @@ mvn exec:java -Dexec.args="--ui"
 In PowerShell, prefer:
 
 ```powershell
-mvn -q exec:java "-Dexec.args=--ui"
+mvn exec:java "-Dexec.args=--ui"
 ```
 
 Run tests:
@@ -149,6 +151,7 @@ The point of this project is to demonstrate:
 - JSON parsing
 - simple market data analytics
 - practical CLI output
+- a small second-step evolution from a CLI MVP into a slightly more capable tool
 
 ## MVP scope
 
@@ -157,11 +160,11 @@ Do now:
 - live market snapshot for a small fixed asset set
 - basic returns and volatility
 - clean terminal presentation
+- optional desktop UI for refresh / sorting
+- export to CSV
 
 Later / optional:
 
 - CLI arguments for custom asset lists
 - configurable quote currency
-- caching for price history
-- export to CSV
 - optional momentum ranking
