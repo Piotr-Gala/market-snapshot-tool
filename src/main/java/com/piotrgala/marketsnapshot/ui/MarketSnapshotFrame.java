@@ -4,6 +4,7 @@ import com.piotrgala.marketsnapshot.export.SnapshotCsvExporter;
 import com.piotrgala.marketsnapshot.model.Asset;
 import com.piotrgala.marketsnapshot.model.AssetSnapshot;
 import com.piotrgala.marketsnapshot.service.MarketSnapshotService;
+import com.piotrgala.marketsnapshot.service.SnapshotDataSource;
 import com.piotrgala.marketsnapshot.service.SnapshotResult;
 import com.piotrgala.marketsnapshot.view.SnapshotFormatter;
 
@@ -92,8 +93,7 @@ public final class MarketSnapshotFrame extends JFrame {
         this.statusLabel = new JLabel("Click refresh to load a market snapshot.");
         this.lastUpdatedLabel = new JLabel("Data as of: not yet");
         this.currentSnapshots = List.of();
-        this.currentResult = new SnapshotResult(List.of(), com.piotrgala.marketsnapshot.service.SnapshotDataSource.LIVE,
-                Instant.now(), List.of());
+        this.currentResult = emptyResult();
 
         configureFrame();
         setContentPane(buildContent());
@@ -210,13 +210,8 @@ public final class MarketSnapshotFrame extends JFrame {
     private void refreshSnapshot() {
         List<Asset> selectedAssets = selectedAssets();
         if (selectedAssets.isEmpty()) {
-            currentSnapshots = List.of();
-            currentResult = new SnapshotResult(List.of(), com.piotrgala.marketsnapshot.service.SnapshotDataSource.LIVE,
-                    Instant.now(), List.of());
-            tableModel.setRowCount(0);
+            clearSnapshotView();
             setStatus("Select at least one asset before refreshing.", ERROR_COLOR);
-            updateWarningsTooltip(List.of());
-            lastUpdatedLabel.setText("Data as of: not yet");
             updateExportButtonState();
             return;
         }
@@ -241,11 +236,11 @@ public final class MarketSnapshotFrame extends JFrame {
                     updateStatusForResult(result, selectedAssets.size());
                 } catch (InterruptedException exception) {
                     Thread.currentThread().interrupt();
+                    clearSnapshotView();
                     setStatus("Refresh was interrupted.", ERROR_COLOR);
-                    updateWarningsTooltip(List.of());
                 } catch (ExecutionException exception) {
+                    clearSnapshotView();
                     setStatus(resolveErrorMessage(exception.getCause()), ERROR_COLOR);
-                    updateWarningsTooltip(List.of());
                 } finally {
                     setLoadingState(false);
                     updateExportButtonState();
@@ -282,16 +277,24 @@ public final class MarketSnapshotFrame extends JFrame {
     }
 
     private void applyCurrentSort() {
-        if (currentSnapshots.isEmpty()) {
-            return;
-        }
-
         SnapshotSortOption sortOption = (SnapshotSortOption) sortComboBox.getSelectedItem();
         if (sortOption == null) {
             sortOption = SnapshotSortOption.MARKET_CAP;
         }
 
         populateTable(sortOption.sort(currentSnapshots));
+    }
+
+    private void clearSnapshotView() {
+        currentSnapshots = List.of();
+        currentResult = emptyResult();
+        tableModel.setRowCount(0);
+        updateWarningsTooltip(List.of());
+        lastUpdatedLabel.setText("Data as of: not yet");
+    }
+
+    private SnapshotResult emptyResult() {
+        return new SnapshotResult(List.of(), SnapshotDataSource.LIVE, Instant.now(), List.of());
     }
 
     private void setLoadingState(boolean isLoading) {
