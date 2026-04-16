@@ -41,7 +41,7 @@ public final class MarketSnapshotApplication {
             Thread.currentThread().interrupt();
             System.err.println("Request was interrupted: " + exception.getMessage());
             return 1;
-        } catch (IOException | IllegalStateException exception) {
+        } catch (IOException exception) {
             System.err.println("Failed to fetch market data: " + exception.getMessage());
             return 1;
         }

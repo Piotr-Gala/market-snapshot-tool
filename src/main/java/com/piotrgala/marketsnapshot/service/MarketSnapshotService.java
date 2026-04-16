@@ -1,6 +1,7 @@
 package com.piotrgala.marketsnapshot.service;
 
 import com.piotrgala.marketsnapshot.client.CoinGeckoClient;
+import com.piotrgala.marketsnapshot.exception.InvalidMarketDataException;
 import com.piotrgala.marketsnapshot.model.Asset;
 import com.piotrgala.marketsnapshot.model.AssetSnapshot;
 import com.piotrgala.marketsnapshot.model.CoinMarket;
@@ -62,22 +63,10 @@ public final class MarketSnapshotService {
             try {
                 SnapshotDataFetcher.FetchResult<List<PricePoint>> historyResult =
                         snapshotDataFetcher.fetchPriceHistory(asset, HISTORY_DAYS);
-                List<PricePoint> priceHistory = historyResult.value();
-                List<PricePoint> dailyPrices = statisticsCalculator.sampleDailyPrices(priceHistory, HISTORY_DAYS);
                 dataSource = dataSource.combine(historyResult.dataSource());
                 dataAsOf = earliestInstant(dataAsOf, historyResult.dataAsOf());
-
-                snapshots.add(new AssetSnapshot(
-                        market.symbol().toUpperCase(),
-                        market.name(),
-                        requireValue(market.currentPrice(), "current price", asset),
-                        market.marketCap(),
-                        market.priceChangePercentage24h(),
-                        statisticsCalculator.calculateReturn(dailyPrices, 7),
-                        statisticsCalculator.calculateReturn(dailyPrices, 30),
-                        statisticsCalculator.calculateAnnualizedVolatility(dailyPrices)
-                ));
-            } catch (IOException | IllegalStateException | IllegalArgumentException exception) {
+                snapshots.add(toAssetSnapshot(asset, market, historyResult.value()));
+            } catch (IOException exception) {
                 warnings.add("Skipped " + asset.symbol().toUpperCase() + ": " + exception.getMessage());
             }
         }
@@ -85,9 +74,51 @@ public final class MarketSnapshotService {
         return new SnapshotResult(snapshots, dataSource, dataAsOf, warnings);
     }
 
-    private double requireValue(Double value, String fieldName, Asset asset) {
+    private AssetSnapshot toAssetSnapshot(Asset asset, CoinMarket market, List<PricePoint> priceHistory)
+            throws InvalidMarketDataException {
+        List<PricePoint> dailyPrices = sampleDailyPrices(priceHistory);
+
+        return new AssetSnapshot(
+                market.symbol().toUpperCase(),
+                market.name(),
+                requireValue(market.currentPrice(), "current price", asset),
+                market.marketCap(),
+                market.priceChangePercentage24h(),
+                calculateReturn(dailyPrices, 7),
+                calculateReturn(dailyPrices, 30),
+                calculateAnnualizedVolatility(dailyPrices)
+        );
+    }
+
+    private List<PricePoint> sampleDailyPrices(List<PricePoint> priceHistory) throws InvalidMarketDataException {
+        try {
+            return statisticsCalculator.sampleDailyPrices(priceHistory, HISTORY_DAYS);
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidMarketDataException(exception.getMessage(), exception);
+        }
+    }
+
+    private double calculateReturn(List<PricePoint> dailyPrices, int days) throws InvalidMarketDataException {
+        try {
+            return statisticsCalculator.calculateReturn(dailyPrices, days);
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidMarketDataException(exception.getMessage(), exception);
+        }
+    }
+
+    private double calculateAnnualizedVolatility(List<PricePoint> dailyPrices) throws InvalidMarketDataException {
+        try {
+            return statisticsCalculator.calculateAnnualizedVolatility(dailyPrices);
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidMarketDataException(exception.getMessage(), exception);
+        }
+    }
+
+    private double requireValue(Double value, String fieldName, Asset asset) throws InvalidMarketDataException {
         if (value == null) {
-            throw new IllegalStateException("CoinGecko response is missing " + fieldName + " for " + asset.symbol());
+            throw new InvalidMarketDataException(
+                    "CoinGecko response is missing " + fieldName + " for " + asset.symbol()
+            );
         }
         return value;
     }

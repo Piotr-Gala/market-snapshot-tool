@@ -47,7 +47,7 @@ public final class CachedMarketDataFetcher implements SnapshotDataFetcher {
             Instant fetchedAt = Instant.now(clock);
             marketsCache.put(cacheKey, markets, fetchedAt);
             return new FetchResult<>(markets, SnapshotDataSource.LIVE, fetchedAt);
-        } catch (IOException | CoinGeckoRequestException exception) {
+        } catch (IOException exception) {
             MemoryCache.CacheEntry<List<CoinMarket>> staleEntry = marketsCache.get(cacheKey);
             if (staleEntry != null) {
                 return new FetchResult<>(staleEntry.value(), SnapshotDataSource.CACHED, staleEntry.storedAt());
@@ -72,7 +72,7 @@ public final class CachedMarketDataFetcher implements SnapshotDataFetcher {
             Instant fetchedAt = Instant.now(clock);
             historyCache.put(cacheKey, history, fetchedAt);
             return new FetchResult<>(history, SnapshotDataSource.LIVE, fetchedAt);
-        } catch (IOException | CoinGeckoRequestException exception) {
+        } catch (IOException exception) {
             MemoryCache.CacheEntry<List<PricePoint>> staleEntry = historyCache.get(cacheKey);
             if (staleEntry != null) {
                 return new FetchResult<>(staleEntry.value(), SnapshotDataSource.CACHED, staleEntry.storedAt());

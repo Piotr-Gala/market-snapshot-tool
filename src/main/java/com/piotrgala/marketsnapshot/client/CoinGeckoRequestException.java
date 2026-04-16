@@ -1,6 +1,8 @@
 package com.piotrgala.marketsnapshot.client;
 
-public final class CoinGeckoRequestException extends IllegalStateException {
+import java.io.IOException;
+
+public final class CoinGeckoRequestException extends IOException {
 
     private final int statusCode;
 

@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MarketSnapshotServicePartialFailureTest {
@@ -94,6 +95,74 @@ class MarketSnapshotServicePartialFailureTest {
         assertTrue(result.warnings().get(0).contains("full 30 day window"));
     }
 
+    @Test
+    void shouldReturnWarningWhenMarketResponseIsMissingRequiredField() throws IOException, InterruptedException {
+        SnapshotDataFetcher dataFetcher = new FakeSnapshotDataFetcher(
+                new SnapshotDataFetcher.FetchResult<>(
+                        List.of(
+                                new CoinMarket("bitcoin", "btc", "Bitcoin", 100_000.0, 2_000_000_000_000.0, 1.5),
+                                new CoinMarket("ethereum", "eth", "Ethereum", null, 600_000_000_000.0, 2.0)
+                        ),
+                        SnapshotDataSource.LIVE,
+                        DATA_AS_OF
+                ),
+                Map.of(
+                        Asset.BTC, liveHistory(
+                                100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.0, 107.0,
+                                108.0, 109.0, 110.0, 111.0, 112.0, 113.0, 114.0, 115.0,
+                                116.0, 117.0, 118.0, 119.0, 120.0, 121.0, 122.0, 123.0,
+                                124.0, 125.0, 126.0, 127.0, 128.0, 129.0, 130.0
+                        ),
+                        Asset.ETH, liveHistory(
+                                200.0, 201.0, 202.0, 203.0, 204.0, 205.0, 206.0, 207.0,
+                                208.0, 209.0, 210.0, 211.0, 212.0, 213.0, 214.0, 215.0,
+                                216.0, 217.0, 218.0, 219.0, 220.0, 221.0, 222.0, 223.0,
+                                224.0, 225.0, 226.0, 227.0, 228.0, 229.0, 230.0
+                        )
+                ),
+                Map.of()
+        );
+
+        MarketSnapshotService service = new MarketSnapshotService(
+                dataFetcher,
+                new StatisticsCalculator(),
+                Clock.fixed(DATA_AS_OF, ZoneOffset.UTC)
+        );
+
+        SnapshotResult result = service.getSnapshotResult(List.of(Asset.BTC, Asset.ETH));
+
+        assertEquals(1, result.snapshots().size());
+        assertEquals("BTC", result.snapshots().get(0).symbol());
+        assertEquals(1, result.warnings().size());
+        assertTrue(result.warnings().get(0).contains("missing current price"));
+    }
+
+    @Test
+    void shouldPropagateUnexpectedRuntimeFailureInsteadOfDowngradingItToWarning() {
+        SnapshotDataFetcher dataFetcher = new FakeSnapshotDataFetcher(
+                new SnapshotDataFetcher.FetchResult<>(
+                        List.of(new CoinMarket("ethereum", "eth", "Ethereum", 5_000.0, 600_000_000_000.0, 2.0)),
+                        SnapshotDataSource.LIVE,
+                        DATA_AS_OF
+                ),
+                Map.of(),
+                Map.of(Asset.ETH, new IllegalStateException("unexpected local failure"))
+        );
+
+        MarketSnapshotService service = new MarketSnapshotService(
+                dataFetcher,
+                new StatisticsCalculator(),
+                Clock.fixed(DATA_AS_OF, ZoneOffset.UTC)
+        );
+
+        IllegalStateException exception = assertThrows(
+                IllegalStateException.class,
+                () -> service.getSnapshotResult(List.of(Asset.ETH))
+        );
+
+        assertTrue(exception.getMessage().contains("unexpected local failure"));
+    }
+
     private static SnapshotDataFetcher.FetchResult<List<PricePoint>> liveHistory(double... prices) {
         return new SnapshotDataFetcher.FetchResult<>(history(prices), SnapshotDataSource.LIVE, DATA_AS_OF);
     }
@@ -109,7 +178,7 @@ class MarketSnapshotServicePartialFailureTest {
     private record FakeSnapshotDataFetcher(
             SnapshotDataFetcher.FetchResult<List<CoinMarket>> markets,
             Map<Asset, SnapshotDataFetcher.FetchResult<List<PricePoint>>> histories,
-            Map<Asset, RuntimeException> historyFailures
+            Map<Asset, Exception> historyFailures
     ) implements SnapshotDataFetcher {
 
         @Override
@@ -118,10 +187,17 @@ class MarketSnapshotServicePartialFailureTest {
         }
 
         @Override
-        public SnapshotDataFetcher.FetchResult<List<PricePoint>> fetchPriceHistory(Asset asset, int days) {
-            RuntimeException failure = historyFailures.get(asset);
+        public SnapshotDataFetcher.FetchResult<List<PricePoint>> fetchPriceHistory(Asset asset, int days)
+                throws IOException {
+            Exception failure = historyFailures.get(asset);
             if (failure != null) {
-                throw failure;
+                if (failure instanceof IOException ioException) {
+                    throw ioException;
+                }
+                if (failure instanceof RuntimeException runtimeException) {
+                    throw runtimeException;
+                }
+                throw new AssertionError("Unsupported failure type in test: " + failure.getClass().getName());
             }
             return histories.get(asset);
         }

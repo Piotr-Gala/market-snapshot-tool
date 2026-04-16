@@ -2,6 +2,7 @@ package com.piotrgala.marketsnapshot.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.piotrgala.marketsnapshot.exception.InvalidMarketDataException;
 import com.piotrgala.marketsnapshot.model.Asset;
 import com.piotrgala.marketsnapshot.model.CoinMarket;
 import com.piotrgala.marketsnapshot.model.MarketChartResponse;
@@ -13,8 +14,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public final class CoinGeckoClient implements MarketDataClient {
 
@@ -65,12 +66,14 @@ public final class CoinGeckoClient implements MarketDataClient {
 
         MarketChartResponse marketChart = objectMapper.readValue(response.body(), MarketChartResponse.class);
         if (marketChart.prices() == null || marketChart.prices().isEmpty()) {
-            throw new IllegalStateException("CoinGecko history response is missing prices for " + asset.symbol());
+            throw new InvalidMarketDataException("CoinGecko history response is missing prices for " + asset.symbol());
         }
 
-        return marketChart.prices().stream()
-                .map(this::toPricePoint)
-                .collect(Collectors.toList());
+        List<PricePoint> pricePoints = new ArrayList<>();
+        for (List<Number> rawPricePoint : marketChart.prices()) {
+            pricePoints.add(toPricePoint(rawPricePoint));
+        }
+        return pricePoints;
     }
 
     private URI buildMarketsUri(List<Asset> assets) {
@@ -94,9 +97,9 @@ public final class CoinGeckoClient implements MarketDataClient {
         return URI.create(uri);
     }
 
-    private PricePoint toPricePoint(List<Number> rawPricePoint) {
+    private PricePoint toPricePoint(List<Number> rawPricePoint) throws InvalidMarketDataException {
         if (rawPricePoint.size() < 2) {
-            throw new IllegalStateException("CoinGecko price point is malformed");
+            throw new InvalidMarketDataException("CoinGecko price point is malformed");
         }
 
         long timestampMillis = rawPricePoint.get(0).longValue();
