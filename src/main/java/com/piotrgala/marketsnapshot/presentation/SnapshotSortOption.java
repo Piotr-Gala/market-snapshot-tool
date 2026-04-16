@@ -1,4 +1,4 @@
-package com.piotrgala.marketsnapshot.ui;
+package com.piotrgala.marketsnapshot.presentation;
 
 import com.piotrgala.marketsnapshot.model.AssetSnapshot;
 

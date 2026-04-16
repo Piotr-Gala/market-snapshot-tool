@@ -1,7 +1,7 @@
 package com.piotrgala.marketsnapshot.view;
 
 import com.piotrgala.marketsnapshot.model.AssetSnapshot;
-import com.piotrgala.marketsnapshot.ui.SnapshotSortOption;
+import com.piotrgala.marketsnapshot.presentation.SnapshotSortOption;
 
 import java.util.List;
 import java.util.Locale;
