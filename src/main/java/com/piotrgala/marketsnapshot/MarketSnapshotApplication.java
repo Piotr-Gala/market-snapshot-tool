@@ -36,11 +36,7 @@ public final class MarketSnapshotApplication {
 
         try {
             SnapshotResult result = marketSnapshotService.getSnapshotResult(Asset.defaultAssets());
-            consoleRenderer.render(result.snapshots());
-            for (String warning : result.warnings()) {
-                System.err.println("Warning: " + warning);
-            }
-            return resolveCliExitCode(result);
+            return renderCliResult(result, consoleRenderer);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             System.err.println("Request was interrupted: " + exception.getMessage());
@@ -49,6 +45,21 @@ public final class MarketSnapshotApplication {
             System.err.println("Failed to fetch market data: " + exception.getMessage());
             return 1;
         }
+    }
+
+    static int renderCliResult(SnapshotResult result, ConsoleRenderer consoleRenderer) {
+        for (String warning : result.warnings()) {
+            System.err.println("Warning: " + warning);
+        }
+
+        int exitCode = resolveCliExitCode(result);
+        if (exitCode != 0) {
+            System.err.println("Failed to fetch market data: no assets loaded.");
+            return exitCode;
+        }
+
+        consoleRenderer.render(result.snapshots());
+        return exitCode;
     }
 
     static int resolveCliExitCode(SnapshotResult result) {
