@@ -4,6 +4,14 @@ Small Java CLI tool that fetches live crypto market data, computes a few simple 
 
 This project is intentionally small. It is not a trading bot, not an alpha engine, and not a full market data platform. The goal is to show a clean, practical MVP built with plain Java and Maven.
 
+## Market Data Trilogy
+
+This repository is part of a small three-project portfolio focused on market data ingestion, monitoring, analysis, and signal evaluation:
+
+- [Market Feed Monitor](https://github.com/Piotr-Gala/market-feed-monitor) — ASP.NET Core + React dashboard for market data ingestion, PostgreSQL snapshots, feed health monitoring, and alerts.
+- [Market Signal Lab](https://github.com/Piotr-Gala/market-signal-lab) — Python/Jupyter project for time-series analysis, feature engineering, simple signal testing, and backtest metrics.
+- [Market Snapshot Tool](https://github.com/Piotr-Gala/market-snapshot-tool) — Java CLI tool for fetching market data and calculating return and realized volatility snapshots.
+
 ## What it does
 
 - fetches live market data for `BTC`, `ETH`, and `SOL`
